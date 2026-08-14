@@ -15,8 +15,12 @@ Run the tests: python test_engine.py
 """
 
 from __future__ import annotations
+import json
+import os
 import random
 import time
+import urllib.error
+import urllib.request
 from dataclasses import dataclass, field
 
 random.seed(7)
@@ -25,11 +29,42 @@ random.seed(7)
 VERBOSE = True        # False = no printing (fast, quiet — used in bulk tests)
 STEP_DELAY = 0.35     # seconds between agent steps in the live demo; 0 in tests
 
+# --- llm() config ------------------------------------------------------------ #
+# MiniMax, OpenAI-compatible /chat/completions endpoint (confirmed with Kai,
+# 2026-08-14 — supersedes the old in-code TODO naming Llama/Qwen via vLLM/Ollama).
+LLM_STUB = "(stubbed llm response)"
+MINIMAX_API_URL = "https://api.minimax.io/v1/chat/completions"
+MINIMAX_MODEL = os.environ.get("MINIMAX_MODEL", "MiniMax-M2.7-highspeed")
 
-def llm(prompt: str) -> str:
-    """Placeholder for the real LLM call.
-    TODO(build): route to Llama/Qwen served via vLLM/Ollama on the Highrise H200."""
-    return "(stubbed llm response)"
+
+def llm(prompt: str, system: str = "", max_tokens: int = 150) -> str:
+    """Calls the MiniMax API if MINIMAX_API_KEY is set in the environment.
+    Falls back to a stub on a missing key, any network error, or a bad response --
+    the engine (and test_engine.py, which force-stubs this) must never depend on
+    network access to run."""
+    api_key = os.environ.get("MINIMAX_API_KEY")
+    if not api_key:
+        return LLM_STUB
+    messages = ([{"role": "system", "content": system}] if system else [])
+    messages.append({"role": "user", "content": prompt})
+    body = {
+        "model": MINIMAX_MODEL,
+        "messages": messages,
+        "max_completion_tokens": max_tokens,
+        "temperature": 0.7,
+    }
+    req = urllib.request.Request(
+        MINIMAX_API_URL,
+        data=json.dumps(body).encode("utf-8"),
+        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+        return data["choices"][0]["message"]["content"].strip()
+    except (urllib.error.URLError, TimeoutError, KeyError, IndexError, ValueError):
+        return LLM_STUB
 
 
 def log(agent: str, msg: str) -> None:
@@ -201,8 +236,18 @@ class ExceptionRecoveryAgent:
 
 
 class CommsAgent:
+    FALLBACK_TEMPLATE = "On the way! {driver} arriving in ~{eta} min."
+
     def run(self, order: Order) -> None:
-        log("Comms Agent", f"WhatsApp -> \"On the way! {order.driver} arriving in ~{order.eta_min} min.\"")
+        msg = llm(
+            f"Write ONE short, warm WhatsApp message (max 20 words, no greeting, "
+            f"no sign-off) telling a customer in Barbados their order is on the way. "
+            f"Driver: {order.driver}. ETA: {order.eta_min} minutes.",
+            system="You are a friendly Barbadian delivery dispatcher writing customer texts.",
+        )
+        if msg == LLM_STUB:
+            msg = self.FALLBACK_TEMPLATE.format(driver=order.driver, eta=order.eta_min)
+        log("Comms Agent", f"WhatsApp -> \"{msg}\"")
         order.event("customer notified")
 
 

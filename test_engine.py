@@ -15,6 +15,11 @@ import nextgen_engine as ng
 ng.VERBOSE = False
 ng.STEP_DELAY = 0
 
+# hermetic: never let tests hit the network, even if MINIMAX_API_KEY is set in the
+# shell (e.g. once it's exported for the live service) -- tests must stay free,
+# deterministic, and offline regardless of environment.
+ng.llm = lambda *a, **k: ng.LLM_STUB
+
 results = []  # (name, ok, detail)
 
 
