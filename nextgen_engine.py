@@ -18,6 +18,7 @@ from __future__ import annotations
 import json
 import os
 import random
+import re
 import time
 import urllib.error
 import urllib.request
@@ -32,9 +33,13 @@ STEP_DELAY = 0.35     # seconds between agent steps in the live demo; 0 in tests
 # --- llm() config ------------------------------------------------------------ #
 # MiniMax, OpenAI-compatible /chat/completions endpoint (confirmed with Kai,
 # 2026-08-14 — supersedes the old in-code TODO naming Llama/Qwen via vLLM/Ollama).
+# MiniMax-Text-01 is the non-reasoning chat model -- deliberately not a
+# "thinking" model (e.g. M2.7), which emits <think> blocks that eat the token
+# budget before producing the actual short customer message.
 LLM_STUB = "(stubbed llm response)"
 MINIMAX_API_URL = "https://api.minimax.io/v1/chat/completions"
-MINIMAX_MODEL = os.environ.get("MINIMAX_MODEL", "MiniMax-M2.7-highspeed")
+MINIMAX_MODEL = os.environ.get("MINIMAX_MODEL", "MiniMax-Text-01")
+_THINK_BLOCK_RE = re.compile(r"<think>.*?</think>", re.DOTALL)
 
 
 def llm(prompt: str, system: str = "", max_tokens: int = 150) -> str:
@@ -62,7 +67,11 @@ def llm(prompt: str, system: str = "", max_tokens: int = 150) -> str:
     try:
         with urllib.request.urlopen(req, timeout=15) as resp:
             data = json.loads(resp.read().decode("utf-8"))
-        return data["choices"][0]["message"]["content"].strip()
+        content = data["choices"][0]["message"]["content"]
+        # safety net: strip any <think>...</think> reasoning blocks, in case a
+        # reasoning model is ever configured via MINIMAX_MODEL
+        content = _THINK_BLOCK_RE.sub("", content).strip()
+        return content or LLM_STUB
     except (urllib.error.URLError, TimeoutError, KeyError, IndexError, ValueError):
         return LLM_STUB
 
