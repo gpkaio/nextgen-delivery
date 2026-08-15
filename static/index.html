@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NextGen Delivery</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f6f5f2;
+    --panel: #ffffff;
+    --ink: #1b1b1b;
+    --muted: #6b6b6b;
+    --border: #e2e0da;
+    --accent: #0f7a5c;
+    --accent-ink: #ffffff;
+    --warn-bg: #fff6e0;
+    --warn-border: #e8c765;
+    --error-bg: #fde8e8;
+    --error-border: #e08a8a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14161a;
+      --panel: #1d2025;
+      --ink: #eee;
+      --muted: #9aa0a6;
+      --border: #30343a;
+      --accent: #35c48c;
+      --accent-ink: #0b1310;
+      --warn-bg: #332b10;
+      --warn-border: #7a6320;
+      --error-bg: #3a1c1c;
+      --error-border: #8a3a3a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+  }
+  header {
+    padding: 1.5rem 1.5rem 0.5rem;
+    max-width: 880px;
+    margin: 0 auto;
+  }
+  header h1 { margin: 0 0 0.15rem; font-size: 1.35rem; }
+  header p { margin: 0; color: var(--muted); font-size: 0.9rem; }
+  main {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 1rem 1.5rem 3rem;
+    display: grid;
+    gap: 1rem;
+  }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.1rem 1.25rem;
+  }
+  label { display: block; font-size: 0.82rem; color: var(--muted); margin: 0.6rem 0 0.25rem; }
+  input, textarea {
+    width: 100%;
+    padding: 0.55rem 0.65rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+  }
+  textarea { min-height: 4.5rem; resize: vertical; }
+  button {
+    margin-top: 0.9rem;
+    padding: 0.6rem 1.1rem;
+    border: none;
+    border-radius: 8px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+  button:disabled { opacity: 0.5; cursor: default; }
+  button.secondary { background: transparent; border: 1px solid var(--border); color: var(--ink); }
+  #log {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    min-height: 2rem;
+  }
+  .step {
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    gap: 0.6rem;
+    font-size: 0.88rem;
+    padding: 0.35rem 0;
+    border-bottom: 1px dashed var(--border);
+    animation: fadein 0.25s ease;
+  }
+  .step:last-child { border-bottom: none; }
+  .step .agent { color: var(--accent); font-weight: 600; }
+  .step .msg { color: var(--ink); }
+  @keyframes fadein { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+  .confirm-card {
+    background: var(--warn-bg);
+    border: 1px solid var(--warn-border);
+    border-radius: 10px;
+    padding: 0.9rem 1rem;
+    margin-top: 0.5rem;
+  }
+  .confirm-card p { margin: 0 0 0.5rem; font-size: 0.88rem; }
+  .coord-row { display: flex; gap: 0.5rem; align-items: end; }
+  .coord-row > div { flex: 1; }
+  .error-card {
+    background: var(--error-bg);
+    border: 1px solid var(--error-border);
+    border-radius: 10px;
+    padding: 0.9rem 1rem;
+    font-size: 0.88rem;
+  }
+  .summary { font-size: 0.92rem; line-height: 1.6; }
+  .summary b { color: var(--accent); }
+  .pill {
+    display: inline-block;
+    font-size: 0.72rem;
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    margin-left: 0.4rem;
+  }
+  #placeholder { color: var(--muted); font-size: 0.88rem; }
+</style>
+</head>
+<body>
+<header>
+  <h1>NextGen Delivery — live dispatch</h1>
+  <p>Place an order with a landmark description and watch the agent pipeline resolve it.</p>
+</header>
+<main>
+  <section class="panel">
+    <label for="raw_text">What do you need?</label>
+    <textarea id="raw_text" placeholder="e.g. 2 rotis and a fish cutter please">2 rotis and a fish cutter please</textarea>
+    <label for="landmark">Where's the drop-off? (landmark, not a street address)</label>
+    <input id="landmark" placeholder="e.g. third house past the blue rum shop, Bank Hall, green gate"
+           value="third house past the blue rum shop, Bank Hall, green gate">
+    <div>
+      <button id="submit">Place order</button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div id="log"><span id="placeholder">Agent activity will appear here once you place an order.</span></div>
+    <div id="confirm-slot"></div>
+    <div id="result-slot"></div>
+  </section>
+</main>
+
+<script>
+const logEl = document.getElementById('log');
+const placeholder = document.getElementById('placeholder');
+const confirmSlot = document.getElementById('confirm-slot');
+const resultSlot = document.getElementById('result-slot');
+const submitBtn = document.getElementById('submit');
+
+function addStep(agent, message) {
+  placeholder.remove();
+  const row = document.createElement('div');
+  row.className = 'step';
+  row.innerHTML = `<span class="agent">${agent}</span><span class="msg">${message}</span>`;
+  logEl.appendChild(row);
+  row.scrollIntoView({ block: 'nearest' });
+}
+
+function renderConfirm(landmark, estimate) {
+  confirmSlot.innerHTML = '';
+  const card = document.createElement('div');
+  card.className = 'confirm-card';
+  card.innerHTML = `
+    <p><b>New landmark</b> — "${landmark}". Estimated drop point below; edit if needed, then confirm.</p>
+    <div class="coord-row">
+      <div><label>Latitude</label><input id="confirm-lat" value="${estimate[0]}"></div>
+      <div><label>Longitude</label><input id="confirm-lon" value="${estimate[1]}"></div>
+      <div><button id="confirm-btn">Confirm drop point</button></div>
+    </div>
+  `;
+  confirmSlot.appendChild(card);
+  return card;
+}
+
+function renderResult(data) {
+  resultSlot.innerHTML = '';
+  const card = document.createElement('div');
+  card.className = 'panel summary';
+  card.innerHTML = `
+    <b>Dispatched</b> — ${data.driver}, ETA ~${data.eta_min} min
+    <span class="pill">${data.category}</span><br>
+    Items: ${data.items.join(', ')}<br>
+    Drop point: ${data.drop_point[0]}, ${data.drop_point[1]}
+  `;
+  resultSlot.appendChild(card);
+}
+
+function renderError(message) {
+  resultSlot.innerHTML = `<div class="error-card">Something went wrong: ${message}</div>`;
+}
+
+async function placeOrder() {
+  submitBtn.disabled = true;
+  logEl.innerHTML = '';
+  confirmSlot.innerHTML = '';
+  resultSlot.innerHTML = '';
+
+  const raw_text = document.getElementById('raw_text').value;
+  const landmark = document.getElementById('landmark').value;
+
+  const res = await fetch('/orders', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ raw_text, landmark }),
+  });
+  const { order_id } = await res.json();
+
+  const source = new EventSource(`/orders/${order_id}/events`);
+  source.onmessage = (evt) => {
+    const data = JSON.parse(evt.data);
+    if (data.type === 'step') {
+      addStep(data.agent, data.message);
+    } else if (data.type === 'confirm_needed') {
+      const card = renderConfirm(data.landmark, data.estimate);
+      card.querySelector('#confirm-btn').onclick = async () => {
+        const lat = parseFloat(card.querySelector('#confirm-lat').value);
+        const lon = parseFloat(card.querySelector('#confirm-lon').value);
+        card.querySelector('#confirm-btn').disabled = true;
+        await fetch(`/orders/${order_id}/confirm`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lat, lon }),
+        });
+        confirmSlot.innerHTML = '';
+      };
+    } else if (data.type === 'confirm_timeout') {
+      confirmSlot.innerHTML = '<div class="confirm-card">No response in time — used the estimate.</div>';
+    } else if (data.type === 'done') {
+      renderResult(data);
+      submitBtn.disabled = false;
+      source.close();
+    } else if (data.type === 'error') {
+      renderError(data.message);
+      submitBtn.disabled = false;
+      source.close();
+    }
+  };
+  source.onerror = () => {
+    source.close();
+    submitBtn.disabled = false;
+  };
+}
+
+submitBtn.addEventListener('click', placeOrder);
+</script>
+</body>
+</html>

@@ -176,8 +176,18 @@ class IntakeAgent:
 class AddressResolutionAgent:
     """THE MOAT: landmark description -> precise drop point, with learning."""
 
-    def __init__(self, memory: LandmarkMemory):
+    def __init__(self, memory: LandmarkMemory, estimator=None):
         self.memory = memory
+        # estimator(landmark: str) -> tuple | None. Default matches the original
+        # random-within-Barbados behavior exactly, so the engine/tests are
+        # unaffected. The live service injects a real geocoder here instead
+        # (see geocoding.py) -- kept pluggable so this file stays dependency-free.
+        self.estimator = estimator or self._random_estimate
+
+    @staticmethod
+    def _random_estimate(landmark: str) -> tuple:
+        return (round(13.10 + random.uniform(-0.02, 0.02), 4),
+                round(-59.62 + random.uniform(-0.02, 0.02), 4))
 
     def run(self, order: Order, confirm_fn) -> None:
         known = self.memory.resolve(order.landmark)
@@ -186,8 +196,7 @@ class AddressResolutionAgent:
             log("Address Resolution", f"landmark KNOWN -> drop point {known} (instant)")
             order.event("landmark resolved from memory")
             return
-        estimate = (round(13.10 + random.uniform(-0.02, 0.02), 4),
-                    round(-59.62 + random.uniform(-0.02, 0.02), 4))
+        estimate = self.estimator(order.landmark) or self._random_estimate(order.landmark)
         log("Address Resolution", f"new landmark -> estimated drop point {estimate}")
         confirmed = confirm_fn(order.landmark, estimate)
         if not (isinstance(confirmed, tuple) and len(confirmed) == 2):
@@ -252,10 +261,13 @@ class CommsAgent:
 
 
 class Orchestrator:
-    def __init__(self):
-        self.memory = LandmarkMemory()
+    def __init__(self, memory: LandmarkMemory | None = None, estimator=None):
+        # memory/estimator default to the original in-memory dict + random
+        # estimate -- zero behavior change for the CLI demo and test_engine.py.
+        # The live service injects PersistentLandmarkMemory + geocode_barbados.
+        self.memory = memory or LandmarkMemory()
         self.intake = IntakeAgent()
-        self.address = AddressResolutionAgent(self.memory)
+        self.address = AddressResolutionAgent(self.memory, estimator=estimator)
         self.merchant = MerchantAgent()
         self.dispatch = DispatchAgent()
         self.exceptions = ExceptionRecoveryAgent()
