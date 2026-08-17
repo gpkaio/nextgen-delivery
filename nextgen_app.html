@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>NextGen Delivery — Clickable Prototype</title>
+<style>
+/* ===== Industry design system, re-tokened GREEN / GOLD (blueprint aesthetic kept) ===== */
+:root{
+  --color-bg:#f1f4f2; --color-surface:#e6ece9; --color-text:#1b2b28;
+  --color-accent:#2f6a5b; --color-divider:color-mix(in srgb,#1b2b28 16%,transparent);
+
+  --color-neutral-100:#f4f6f5; --color-neutral-200:#e6ebe9; --color-neutral-300:#d3dbd8;
+  --color-neutral-400:#b6c1bd; --color-neutral-500:#97a5a0; --color-neutral-600:#788781;
+  --color-neutral-700:#5c6b65; --color-neutral-800:#414d49; --color-neutral-900:#2a3330;
+
+  --color-accent-100:#e6f1ec; --color-accent-200:#cbe3d9; --color-accent-300:#a6ccbe;
+  --color-accent-400:#7cb3a1; --color-accent-500:#54967f; --color-accent-600:#3c7a64;
+  --color-accent-700:#2f6153; --color-accent-800:#244a3f; --color-accent-900:#19352d;
+
+  --gold:#e3b23c; --gold-100:#fbf1d6; --gold-200:#f4e0a8; --gold-700:#9a751e; --gold-800:#7c5f18;
+
+  --font-heading:"Barlow Condensed",system-ui,sans-serif; --fhw:600;
+  --font-body:"Barlow",system-ui,sans-serif;
+  --s1:3.4px; --s2:6.8px; --s3:10.2px; --s4:13.6px; --s6:20.4px; --s8:27.2px;
+}
+@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;700&family=Barlow+Condensed:wght@400;600&display=swap');
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:radial-gradient(1000px 500px at 82% -10%,#35564f 0,transparent 55%),
+             linear-gradient(160deg,#1c332e,#2a4a42 60%,#20403a);
+  color:var(--color-text);font-family:var(--font-body);font-size:15px;line-height:1.55;
+  min-height:100vh;display:flex;justify-content:center;align-items:flex-start;
+  padding:34px 20px 70px;gap:40px;flex-wrap:wrap
+}
+h1,h2,h3,h4{font-family:var(--font-heading);font-weight:var(--fhw);line-height:1.12;margin:0}
+
+/* blueprint frame + registration marks */
+.blueprint{position:relative;border:1px solid var(--color-divider);border-radius:0}
+.blueprint>.corner{position:absolute;width:11px;height:11px;color:var(--gold)}
+.blueprint>.corner::before,.blueprint>.corner::after{content:"";position:absolute;background:currentColor}
+.blueprint>.corner::before{left:5px;top:0;width:1px;height:100%}
+.blueprint>.corner::after{top:5px;left:0;width:100%;height:1px}
+.corner.tl{top:-6px;left:-6px}.corner.tr{top:-6px;right:-6px}
+.corner.bl{bottom:-6px;left:-6px}.corner.br{bottom:-6px;right:-6px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;
+  font-family:var(--font-heading);font-weight:var(--fhw);font-size:14px;line-height:1.2;
+  color:var(--color-text);background:transparent;border:1px solid var(--color-divider);
+  border-radius:0;padding:var(--s2) calc(var(--s3)*1.2)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primary{background:var(--color-accent);color:#fff;border-color:var(--color-accent)}
+.btn-primary:hover{background:var(--color-accent-600)}
+.btn-secondary:hover{background:color-mix(in srgb,var(--color-text) 7%,transparent)}
+.btn-ghost{border-color:transparent;color:var(--color-accent)}
+.btn-block{width:100%}
+.card{display:flex;flex-direction:column;gap:var(--s2);padding:var(--s3);
+  border:1px solid var(--color-divider);border-radius:0;background:transparent}
+.card-kicker{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-700)}
+.card-title{font-family:var(--font-heading);font-weight:var(--fhw);font-size:17px;line-height:1.2}
+.tag{display:inline-flex;align-items:center;font-size:11px;letter-spacing:.02em;padding:3px 10px;border-radius:0}
+.tag-accent{background:var(--color-accent-100);color:var(--color-accent-800)}
+.tag-known{background:var(--gold-100);color:var(--gold-800);border:1px solid var(--gold)}
+.tag-neutral{background:var(--color-neutral-100);color:var(--color-neutral-800)}
+.tag-outline{border:1px solid var(--color-accent);color:var(--color-accent)}
+.text-muted{color:color-mix(in srgb,var(--color-text) 55%,transparent)}
+
+/* animations */
+@keyframes ng-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes ng-pop{0%{opacity:0;transform:scale(.7)}60%{transform:scale(1.12)}100%{opacity:1;transform:scale(1)}}
+@keyframes ng-drive{from{offset-distance:0%}to{offset-distance:100%}}
+@keyframes ng-dash{to{stroke-dashoffset:-40}}
+@keyframes ng-pulse{0%,100%{opacity:.35}50%{opacity:1}}
+@keyframes ng-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.in{animation:ng-in .28s ease both}
+
+/* device */
+.stage{display:flex;flex-direction:column;gap:14px;flex:none}
+.stagehead{display:flex;align-items:flex-end;gap:14px;color:#eaf3ef;width:412px}
+.stagehead .k{font-family:var(--font-heading);font-size:11px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--gold-200)}
+.stagehead .sub{font-size:12px;color:#b9ccc4}
+.toggle{display:flex;margin-left:auto;border:1px solid rgba(255,255,255,.25)}
+.toggle button{height:30px;border:0;background:transparent;color:#eaf3ef;font-family:var(--font-heading);
+  font-weight:var(--fhw);font-size:12px;letter-spacing:.06em;padding:0 12px;cursor:pointer}
+.toggle button.on{background:var(--gold);color:var(--color-accent-900)}
+.toggle .sep{width:1px;background:rgba(255,255,255,.25)}
+
+.device{width:412px;height:892px;background:#0d1a17;border-radius:44px;padding:12px;
+  box-shadow:0 30px 80px rgba(10,20,17,.55);position:relative}
+.notch{position:absolute;top:16px;left:50%;transform:translateX(-50%);width:150px;height:26px;
+  background:#0d1a17;border-radius:0 0 16px 16px;z-index:6}
+.viewport{width:100%;height:100%;background:var(--color-bg);border-radius:33px;overflow:hidden;
+  display:flex;flex-direction:column;position:relative}
+
+/* app chrome */
+.appbar{flex:none;padding:15px 16px 9px;border-bottom:1px solid var(--color-divider);
+  display:flex;align-items:center;gap:10px}
+.appbar .logo{font-family:var(--font-heading);font-weight:var(--fhw);font-size:17px;letter-spacing:.02em}
+.appbar .vr{width:1px;height:15px;background:var(--color-divider)}
+.appbar .kick{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--color-neutral-600)}
+.appbar .val{font-size:13px}
+.appbar .bartag{margin-left:auto;font-size:9px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--color-accent-700);border:1px solid var(--color-divider);padding:2px 6px}
+.appbar .bartag.known{color:var(--gold-800);border-color:var(--gold)}
+.appbody{flex:1;overflow:auto;padding:14px 16px 12px}
+.appbody::-webkit-scrollbar{width:0}
+.bottomnav{flex:none;display:flex;border-top:1px solid var(--color-divider)}
+.bottomnav button{flex:1;height:56px;border:0;background:transparent;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--color-neutral-600)}
+.bottomnav button.on{color:var(--color-accent)}
+.bottomnav .lb{font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-family:var(--font-heading)}
+
+/* helpers */
+.stack{display:flex;flex-direction:column}
+.row{display:flex;align-items:center}
+.grow{flex:1}
+.mapfig{position:relative;background:
+  linear-gradient(var(--color-neutral-200) 0 1px,transparent 1px 100%) 0 0/100% 18px,
+  linear-gradient(90deg,var(--color-neutral-200) 0 1px,transparent 1px 100%) 0 0/26px 100%}
+.chip{font-size:9px;color:var(--color-neutral-700);border:1px solid var(--color-divider);
+  background:var(--color-bg);padding:1px 5px}
+.pin{color:var(--color-accent-800);animation:ng-bob 1.9s ease-in-out infinite}
+.driver{position:absolute;width:22px;height:22px;border:1px solid var(--color-accent);
+  background:var(--color-bg);display:grid;place-items:center;color:var(--color-accent-800)}
+.micro{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--color-neutral-600)}
+.sectlabel{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--color-neutral-600);margin:2px 0 8px}
+.replybtn{width:100%;text-align:left;font-family:var(--font-body);font-size:13px;
+  border:1px solid var(--color-divider);background:transparent;padding:9px 11px;cursor:pointer;color:var(--color-text)}
+.replybtn:hover{background:color-mix(in srgb,var(--color-text) 6%,transparent)}
+.hint{color:#b9ccc4;font-size:12px;text-align:center;width:412px}
+svg.ic{display:block}
+@media(max-width:900px){.hint,.stagehead{width:auto}}
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="stagehead">
+    <div class="stack" style="gap:2px">
+      <span class="k">NextGen Delivery · clickable prototype</span>
+      <span class="sub" id="appLabel">Customer app · Android 412 × 892</span>
+    </div>
+    <div class="toggle">
+      <button id="tgCust" class="on" onclick="setApp('customer')">CUSTOMER</button>
+      <span class="sep"></span>
+      <button id="tgDrv" onclick="setApp('driver')">DRIVER</button>
+    </div>
+  </div>
+
+  <div class="device">
+    <div class="notch"></div>
+    <div class="viewport">
+      <div class="appbar" id="appbar"></div>
+      <div class="appbody" id="screen"></div>
+      <div class="bottomnav" id="bottomnav"></div>
+    </div>
+  </div>
+  <div class="hint" id="hint">Auto-plays the demo · use CUSTOMER / DRIVER to switch surfaces</div>
+</div>
+
+<script>
+/* ============================ Lucide-ish inline icons ============================ */
+function ic(name,s){s=s||18;var p={
+  'message-square':'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+  'list':'<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
+  'map-pin':'<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>',
+  'send':'<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',
+  'check':'<path d="M20 6 9 17l-5-5"/>',
+  'bike':'<circle cx="18.5" cy="17.5" r="3.5"/><circle cx="5.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2Zm-3.5 11.5L9 9l3 3h4l-2.5 5.5"/>',
+  'arrow-right':'<path d="M5 12h14M12 5l7 7-7 7"/>',
+  'arrow-left':'<path d="M19 12H5M12 19l-7-7 7-7"/>',
+  'star':'<path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01Z"/>',
+  'navigation':'<path d="M3 11l19-9-9 19-2-8-8-2Z"/>'
+};return '<svg class="ic" width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'+(p[name]||'')+'</svg>';}
+
+/* ============================ State ============================ */
+var S={app:'customer',screen:'onboard',run:1,chatStage:0,messages:[],typing:false,
+  agentIndex:0,awaitSpot:false,awaitSub:false,eta:14,rating:0,learned:false};
+var timers=[]; var SPEED=1;
+function T(ms,fn){var id=setTimeout(fn,ms*SPEED);timers.push(id);return id}
+function clearT(){timers.forEach(clearTimeout);timers=[]}
+function set(k,v){S[k]=v}
+
+/* driver-name / route data straight from the engine */
+var AGENTS=[
+ {n:'INTAKE',                p:'reading the order…',   d1:'prescription (your usual) + water · 2 items', d2:'repeat order · 3 items'},
+ {n:'ADDRESS RESOLUTION',    p1:'matching “blue rum shop”…', p2:'searching memory…', d1:'drop point set · confirmed by you', d2:'drop point 001 · matched in 0.4s'},
+ {n:'MERCHANT',              p:'checking stock…',      d1:'substitution approved · Cemol', d2:'all items in stock'},
+ {n:'DISPATCH & ROUTING',    p:'finding a driver…',    d1:'Kemar J. · 3.4 km, ETA 14 min', d2:'Andre D. · 3.2 km, ETA 11 min'},
+ {n:'EXCEPTION & RECOVERY',  p:'watching the run…',    d1:'Kemar J. cancelled → Andre D., +2 min', d2:'no disruptions'},
+ {n:'COMMS',                 p:'writing your update…', d1:'you’ll get updates here', d2:'you’ll get updates here'}
+];
+
+/* ============================ Chrome ============================ */
+function renderChrome(){
+  var bar=document.getElementById('appbar'), nav=document.getElementById('bottomnav');
+  document.getElementById('appLabel').textContent=(S.app==='customer'?'Customer app':'Driver app')+' · Android 412 × 892';
+  document.getElementById('tgCust').classList.toggle('on',S.app==='customer');
+  document.getElementById('tgDrv').classList.toggle('on',S.app==='driver');
+  var kick,val,tag,known=false;
+  if(S.app==='customer'){kick='Delivering to';val='Bank Hall, Bridgetown';
+    if(S.run===2){tag='RUN 2 · ⚡ KNOWN';known=true;} else {tag='RUN 1 · NEW SPOT';}
+  }else{kick='Driver';val='Andre D. · Bank Hall zone';tag='ON SHIFT';}
+  bar.innerHTML='<span class="logo">NEXTGEN</span><span class="vr"></span>'+
+    '<div class="stack" style="line-height:1.15;min-width:0"><span class="kick">'+kick+'</span><span class="val">'+val+'</span></div>'+
+    '<span class="bartag'+(known?' known':'')+'">'+tag+'</span>';
+  if(S.app==='customer'){
+    nav.style.display='flex';
+    var items=[['chat','ORDER','message-square'],['orders','ORDERS','list'],['spots','SPOTS','map-pin']];
+    nav.innerHTML=items.map(function(it){
+      var on=(S.screen===it[0]||(it[0]==='chat'&&['chat','pipeline','track','done'].indexOf(S.screen)>=0));
+      return '<button class="'+(on?'on':'')+'" onclick="go(\''+it[0]+'\')">'+ic(it[2],18)+'<span class="lb">'+it[1]+'</span></button>';
+    }).join('');
+  }else{nav.style.display='none';nav.innerHTML='';}
+}
+
+/* ============================ Router ============================ */
+function go(scr){clearT();set('screen',scr);
+  if(scr==='chat'&&S.messages.length===0)seedChat();
+  render();}
+function setApp(a){clearT();set('app',a);
+  set('screen',a==='customer'?'chat':'dqueue');
+  if(a==='customer'&&S.messages.length===0)seedChat();
+  render();}
+function render(){renderChrome();
+  var v=document.getElementById('screen');
+  var f=({onboard:scrOnboard,chat:scrChat,pipeline:scrPipeline,track:scrTrack,done:scrDone,
+    orders:scrOrders,spots:scrSpots,dqueue:scrDQueue,djob:scrDJob,darrived:scrDArrived})[S.screen];
+  v.innerHTML='<div class="in">'+f()+'</div>';v.scrollTop=0;
+  if(S.screen==='pipeline')runPipeline();
+  if(S.screen==='track')runTrack();
+}
+
+/* ============================ Screens: customer ============================ */
+function scrOnboard(){
+  return ''+
+  '<div class="stack" style="gap:18px;padding-top:6px">'+
+   '<div class="blueprint mapfig" style="height:150px">'+
+     corners()+
+     '<svg viewBox="0 0 364 150" width="100%" height="100%" style="position:absolute;inset:0" fill="none" stroke="var(--color-accent-400)" stroke-width="1.5"><path d="M0 118 L96 118 L96 52 L364 52"/><path d="M232 150 L232 52"/></svg>'+
+     '<span class="chip" style="position:absolute;left:22%;top:64px">blue rum shop</span>'+
+     '<span class="pin" style="position:absolute;left:60%;top:34px">'+ic('map-pin',22)+'</span>'+
+     '<span class="micro" style="position:absolute;left:10px;bottom:8px">No street numbers here</span>'+
+   '</div>'+
+   '<h1 style="font-size:29px">Tell us where you are the way you’d tell a friend</h1>'+
+   '<p class="text-muted" style="font-size:14px;margin:0">No house number, no pin hunting. Describe the landmark — our agents work out the exact drop point and remember it for good.</p>'+
+   onboardRow('01','Chat your order in plain words — like a WhatsApp message.')+
+   onboardRow('02','Confirm a brand-new spot once. One tap, never again.')+
+   onboardRow('03','Every order after that resolves instantly — ⚡ known spot.')+
+   '<button class="btn btn-primary btn-block" style="height:48px;letter-spacing:.04em" onclick="go(\'chat\')">START AN ORDER</button>'+
+  '</div>';
+}
+function onboardRow(n,t){return '<div class="row" style="gap:11px;border-top:1px solid var(--color-divider);padding:11px 0">'+
+  '<span class="row" style="justify-content:center;width:22px;height:22px;border:1px solid var(--color-divider);font-family:var(--font-heading);font-size:11px;color:var(--color-accent-700)">'+n+'</span>'+
+  '<span style="font-size:13px">'+t+'</span></div>';}
+
+function seedChat(){set('chatStage',0);set('typing',false);
+  set('messages',[{who:'meta',text:S.run===1?'New conversation':'New conversation · spot 001 known'},
+    {who:'bot',text:S.run===1?'Hi! What can I bring you today?':'Welcome back. What can I bring you?'}]);}
+
+function scrChat(){
+  var msgs=S.messages.map(function(m){
+    if(m.who==='meta')return '<div class="micro" style="text-align:center;margin:4px 0">'+m.text+'</div>';
+    if(m.who==='bot')return '<div class="row" style="gap:8px;align-items:flex-start;max-width:88%">'+
+      '<span class="row" style="justify-content:center;flex:none;width:22px;height:22px;border:1px solid var(--color-accent);font-family:var(--font-heading);font-size:9px;color:var(--color-accent-700)">NG</span>'+
+      '<div style="border:1px solid var(--color-divider);background:var(--color-neutral-100);padding:9px 11px;font-size:13.5px;line-height:1.45">'+m.text+'</div></div>';
+    return '<div style="align-self:flex-end;max-width:86%;border:1px solid var(--color-accent);background:var(--color-accent-100);color:var(--color-accent-900);padding:9px 11px;font-size:13.5px;line-height:1.45">'+m.text+'</div>';
+  }).join('');
+  var typing=S.typing?'<div class="row" style="gap:5px;padding:2px 0 2px 30px">'+
+    '<span style="width:5px;height:5px;background:var(--color-accent);animation:ng-pulse 1s infinite"></span>'+
+    '<span style="width:5px;height:5px;background:var(--color-accent);animation:ng-pulse 1s .2s infinite"></span>'+
+    '<span style="width:5px;height:5px;background:var(--color-accent);animation:ng-pulse 1s .4s infinite"></span></div>':'';
+  var chips='';
+  if(!S.typing&&S.chatStage<2){
+    var set0=S.run===1?['my usual from the pharmacy + a case of water','2 rotis and a fish cutter please']
+                       :['the usual again + 2 rotis','2 rotis and a fish cutter please'];
+    var set1=S.run===1?['third house past the blue rum shop, green gate','⚡ St. Mary’s Church']
+                       :['⚡ by the rum shop — the one with the green gate','⚡ St. Mary’s Church'];
+    var opts=S.chatStage===0?set0:set1;
+    chips='<div style="border-top:1px solid var(--color-divider);padding-top:9px;margin-top:6px">'+
+      '<div class="micro" style="margin-bottom:7px">Tap to reply</div>'+
+      '<div class="stack" style="gap:7px">'+opts.map(function(o){
+        return '<button class="replybtn" onclick="sendReply(\''+esc(o)+'\')">'+o+'</button>';}).join('')+'</div></div>';
+  }
+  var composer='<div class="row" style="gap:8px;margin-top:10px">'+
+    '<div class="grow" style="height:38px;border:1px solid var(--color-divider);background:var(--color-surface);display:flex;align-items:center;padding:0 10px;font-size:13px;color:var(--color-neutral-500)">Type a message…</div>'+
+    '<div style="width:38px;height:38px;border:1px solid var(--color-divider);display:grid;place-items:center;color:var(--color-neutral-500)">'+ic('send',18)+'</div></div>';
+  return '<div class="stack" style="gap:9px;min-height:100%">'+msgs+typing+'<div class="grow"></div>'+chips+composer+'</div>';
+}
+function sendReply(text){
+  S.messages.push({who:'me',text:text});
+  var stage=S.chatStage;
+  set('typing',true);render();
+  T(900,function(){
+    set('typing',false);
+    var bot;
+    if(stage===0){bot=S.run===1?'Got it — prescription (your usual) and a case of water. Where should I bring it?'
+                                :'Same as last time? Got it — 3 items. Same gate?';
+      set('chatStage',1);S.messages.push({who:'bot',text:bot});render();
+    }else{
+      bot=S.run===1?'New spot for me. Give me a second to work it out.':'⚡ Known spot — sending it now.';
+      set('chatStage',2);S.messages.push({who:'bot',text:bot});render();
+      T(700,function(){go('pipeline')});
+    }
+  });
+}
+
+function scrPipeline(){
+  var status=S.awaitSpot||S.awaitSub?'waiting on you':(S.agentIndex>=6?'dispatched':'working…');
+  var rows=AGENTS.map(function(a,i){
+    var num=('0'+(i+1)).slice(-2), state, note, tag;
+    if(i<S.agentIndex){state='done';
+      note=S.run===1?a['d1']:a['d2'];
+      tag='<span class="tag tag-accent">DONE</span>';
+    }else if(i===S.agentIndex){
+      if(i===1&&S.awaitSpot){note='new landmark — needs your ok';tag='<span class="tag tag-outline" style="animation:ng-pulse 1.2s infinite">WORKING</span>';}
+      else if(i===2&&S.awaitSub){note='substitution — needs your ok';tag='<span class="tag tag-outline" style="animation:ng-pulse 1.2s infinite">WORKING</span>';}
+      else{note=(i===1)?(S.run===1?a.p1:a.p2):a.p;tag='<span class="tag tag-outline" style="animation:ng-pulse 1.2s infinite">WORKING</span>';}
+    }else{state='q';note='—';tag='<span class="tag tag-neutral">QUEUED</span>';}
+    var known=(i===1&&S.run===2&&i<S.agentIndex)?'<span class="tag tag-known" style="margin-left:6px;animation:ng-pop .4s ease both">⚡ KNOWN</span>':'';
+    return '<div class="row" style="gap:10px;padding:11px 0;border-bottom:1px solid var(--color-divider);align-items:flex-start">'+
+      '<span class="row" style="justify-content:center;flex:none;width:24px;height:24px;border:1px solid var(--color-divider);font-family:var(--font-heading);font-size:11px;color:var(--color-accent-700)">'+num+'</span>'+
+      '<div class="grow"><div class="row"><span style="font-family:var(--font-heading);font-size:14px;letter-spacing:.02em">'+a.n+'</span>'+known+'</div>'+
+      '<div style="font-size:11.5px;color:var(--color-neutral-600);margin-top:2px">'+note+'</div></div>'+tag+'</div>';
+  }).join('');
+  var interrupt='';
+  if(S.awaitSpot)interrupt=confirmSpotCard();
+  if(S.awaitSub)interrupt=subCard();
+  return '<div class="row" style="justify-content:space-between;margin-bottom:6px">'+
+    '<span class="micro">Agent pipeline</span><span style="font-size:11px;color:var(--color-accent-700)">'+status+'</span></div>'+
+    rows+interrupt;
+}
+function runPipeline(){
+  set('agentIndex',0);set('awaitSpot',false);set('awaitSub',false);
+  T(600,advance);
+}
+function advance(){
+  var i=S.agentIndex;
+  // pause points (run 1 only)
+  if(i===1&&S.run===1&&!S._spotDone){set('awaitSpot',true);render();return;}
+  if(i===2&&S.run===1&&!S._subDone){set('awaitSub',true);render();return;}
+  if(i>=6){ // done -> tracking
+    render(); T(700,function(){set('eta',S.run===1?14:11);go('track')}); return;
+  }
+  set('agentIndex',i+1);render();
+  T(950,advance);
+}
+function confirmSpot(){set('awaitSpot',false);S._spotDone=true;set('agentIndex',2);render();T(800,advance);}
+function approveSub(){set('awaitSub',false);S._subDone=true;set('agentIndex',3);render();T(800,advance);}
+
+function confirmSpotCard(){
+  return '<div class="card blueprint" style="margin-top:14px;gap:10px">'+corners()+
+   '<div class="card-kicker">Human in the loop · one tap</div>'+
+   '<div class="card-title">Is this the green gate?</div>'+
+   '<div class="blueprint mapfig" style="height:106px">'+corners()+
+     '<svg viewBox="0 0 340 106" width="100%" height="100%" style="position:absolute;inset:0" fill="none" stroke="var(--color-accent-400)" stroke-width="1.5"><path d="M0 80 L90 80 L90 34 L340 34"/></svg>'+
+     '<span class="chip" style="position:absolute;left:20%;top:44px">blue rum shop</span>'+
+     '<span class="pin" style="position:absolute;left:58%;top:16px">'+ic('map-pin',20)+'</span>'+
+     '<span style="position:absolute;right:8px;bottom:6px;font-size:9px;font-variant-numeric:tabular-nums;color:var(--color-neutral-600)">13.0993, −59.6211 · estimate</span>'+
+   '</div>'+
+   '<p class="text-muted" style="font-size:12px;margin:0">Confirm once and this becomes a saved drop point — for you and for every driver.</p>'+
+   '<div class="row" style="gap:8px"><button class="btn btn-primary grow" style="height:42px" onclick="confirmSpot()">YES, THAT’S IT</button>'+
+   '<button class="btn btn-secondary" style="height:42px" onclick="confirmSpot()">MOVE PIN</button></div></div>';
+}
+function subCard(){
+  return '<div class="card blueprint" style="margin-top:14px;gap:10px">'+corners()+
+   '<div class="card-kicker">Merchant agent · needs your ok</div>'+
+   '<div class="card-title">Panadol is out of stock</div>'+
+   '<div class="row" style="gap:8px;align-items:stretch">'+
+     '<div class="card" style="flex:1;opacity:.6;gap:2px"><div class="micro">Ordered</div><div style="font-size:13px">Panadol 500mg</div><div class="text-muted" style="font-size:12px">24 · $8.40</div></div>'+
+     '<div class="row" style="color:var(--color-neutral-500)">'+ic('arrow-right',18)+'</div>'+
+     '<div class="card" style="flex:1;border-color:var(--color-accent);background:var(--color-accent-100);gap:2px"><div class="micro" style="color:var(--color-accent-700)">Substitute</div><div style="font-size:13px">Cemol 500mg</div><div class="text-muted" style="font-size:12px">24 · $7.90 · same paracetamol</div></div>'+
+   '</div>'+
+   '<div class="row" style="gap:8px"><button class="btn btn-primary grow" style="height:42px" onclick="approveSub()">APPROVE SWAP</button>'+
+   '<button class="btn btn-secondary" style="height:42px" onclick="approveSub()">DROP IT</button></div></div>';
+}
+
+function scrTrack(){
+  var drv=S.run===1?'Andre D.':'Andre D.';
+  var note=S.run===1?'re-assigned after a cancellation':'delivered to this gate before';
+  var updates=S.run===1?[
+     ['09:31','Order accepted · Cemol swapped in'],
+     ['09:33','Kemar J. cancelled — re-planned to Andre D. automatically'],
+     ['09:34','On the way! Andre D. arriving in ~14 min. He has the confirmed green-gate pin.']]
+    :[['09:34','Order accepted · resolved to known spot 001'],
+      ['09:35','Andre D. picked up your order'],
+      ['09:36','On the way! Andre D. arriving in ~11 min.']];
+  var path="M 40 190 C 120 160, 90 90, 190 90 S 300 120, 330 44";
+  return ''+
+  '<div class="blueprint mapfig" style="height:220px;margin-bottom:2px">'+corners()+
+    '<svg viewBox="0 0 372 220" width="100%" height="100%" style="position:absolute;inset:0" fill="none">'+
+      '<path d="'+path+'" stroke="var(--color-accent)" stroke-width="2" stroke-dasharray="6 6" style="animation:ng-dash 2s linear infinite"/>'+
+      '<circle cx="40" cy="190" r="4" fill="var(--color-accent-700)"/></svg>'+
+    '<span class="driver" id="drv" style="offset-path:path(\''+path+'\');top:-11px;left:-11px">'+ic('bike',13)+'</span>'+
+    '<span class="pin" style="position:absolute;left:322px;top:26px">'+ic('map-pin',22)+'</span>'+
+    '<span class="micro" style="position:absolute;left:10px;bottom:8px">Landmark grid · Bank Hall</span>'+
+  '</div>'+
+  '<div class="row blueprint" style="padding:11px;gap:12px;border-color:var(--color-divider)">'+corners()+
+    '<div class="stack"><span style="font-family:var(--font-heading);font-size:34px;color:var(--color-accent-800);line-height:1" id="etaN">'+S.eta+'</span><span class="micro">min away</span></div>'+
+    '<span style="width:1px;height:38px;background:var(--color-divider)"></span>'+
+    '<div class="stack grow"><span style="font-family:var(--font-heading);font-size:15px">'+drv+'</span><span style="font-size:11.5px;color:var(--color-neutral-600)">'+note+'</span></div>'+
+    '<span class="row" style="justify-content:center;width:34px;height:34px;border:1px solid var(--color-accent);font-family:var(--font-heading);color:var(--color-accent-800)">A</span>'+
+  '</div>'+
+  '<div class="sectlabel" style="margin-top:14px">Updates</div>'+
+  updates.map(function(u){return '<div class="row" style="gap:0;border-left:1px solid var(--color-accent-400);padding:6px 0 6px 10px;align-items:flex-start">'+
+     '<span style="width:34px;flex:none;font-size:9px;font-variant-numeric:tabular-nums;color:var(--color-neutral-600)">'+u[0]+'</span>'+
+     '<span style="font-size:12.5px">'+u[1]+'</span></div>';}).join('')+
+  '<button class="btn btn-secondary btn-block" style="height:42px;margin-top:12px" onclick="finishTrack()">SKIP TO ARRIVAL</button>';
+}
+function runTrack(){var el=document.getElementById('drv');if(el)el.style.animation='ng-drive 9s linear infinite';
+  tickETA();}
+function tickETA(){T(1100,function(){
+  if(S.screen!=='track')return;
+  if(S.eta<=1){finishTrack();return;}
+  set('eta',S.eta-1);var n=document.getElementById('etaN');if(n)n.textContent=S.eta;tickETA();
+});}
+function finishTrack(){clearT();go('done');}
+
+function scrDone(){
+  var receipt=S.run===1?['Order 4471',['Prescription (usual) + Cemol','$31.90'],['Water · 1 case','$9.50'],'$46.40']
+                       :['Order 4479',['Prescription (usual)','$24.00'],['Rotis · 2','$12.00'],'$41.00'];
+  var rateNote=S.rating===0?'Rate the run — it trains driver routing, not the landmark.'
+              :(S.rating>=4?'Thanks — Andre keeps this zone.':'Noted. We’ll ask what went wrong.');
+  var stars='';for(var i=1;i<=5;i++){stars+='<button class="btn btn-secondary" style="width:44px;height:44px;color:'+(i<=S.rating?'var(--gold)':'var(--color-neutral-500)')+'" onclick="rate('+i+')">'+ic('star',18)+'</button>';}
+  var memory=S.run===1?('<div class="card blueprint">'+corners()+
+     '<div class="row" style="gap:8px"><span class="card-kicker">Memory updated</span><span class="tag tag-known" style="animation:ng-pop .4s .2s both">⚡ KNOWN</span></div>'+
+     '<div class="card-title">“Blue rum shop, green gate” is now drop point 001</div>'+
+     '<p class="text-muted" style="font-size:12px;margin:0">Next order here resolves from memory in under a second — no confirmation, no house number.</p></div>'):'';
+  return ''+
+  '<div class="row blueprint" style="gap:8px;padding:13px 12px;border-color:var(--color-accent);background:var(--color-accent-100);color:var(--color-accent-900);margin-bottom:14px">'+corners()+
+    ic('check',18)+'<span style="font-family:var(--font-heading);font-size:19px">Delivered to the green gate</span></div>'+
+  memory+
+  '<div class="card blueprint" style="margin-top:14px">'+corners()+
+    '<div class="micro">How did it go?</div><div class="row" style="gap:6px">'+stars+'</div>'+
+    '<div class="text-muted" style="font-size:12px">'+rateNote+'</div></div>'+
+  '<div class="card blueprint" style="margin-top:14px;gap:6px">'+corners()+
+    '<div class="card-kicker">'+receipt[0]+'</div>'+
+    receiptRow(receipt[1])+receiptRow(receipt[2])+
+    '<div style="height:1px;background:var(--color-divider);margin:4px 0"></div>'+
+    '<div class="row" style="justify-content:space-between;font-family:var(--font-heading);font-size:16px"><span>Total</span><span>'+receipt[3]+'</span></div></div>'+
+  '<button class="btn btn-primary btn-block" style="height:46px;margin-top:14px" onclick="orderAgain()">ORDER AGAIN</button>';
+}
+function receiptRow(r){return '<div class="row" style="justify-content:space-between;font-size:13px"><span>'+r[0]+'</span><span>'+r[1]+'</span></div>';}
+function rate(n){set('rating',n);render();}
+function orderAgain(){clearT();S._spotDone=false;S._subDone=false;
+  set('run',2);set('learned',true);set('rating',0);set('messages',[]);set('chatStage',0);
+  set('eta',11);seedChat();go('chat');}
+
+function scrOrders(){
+  var rows=[
+   ['4479','today · 9:34','Prescription (usual) · Rotis ×2','known','Blue rum shop · green gate','$41.00'],
+   ['4471','6 days ago','Prescription (usual) · Cemol · Water','confirmed','Blue rum shop · green gate','$46.40'],
+   ['4390','3 weeks ago','Cutter · drinks','known','St. Mary’s Church','$18.50']];
+  return '<div class="sectlabel">Your orders</div>'+rows.map(function(r){
+    var tag=r[3]==='known'?'<span class="tag tag-known">⚡ KNOWN</span>':'<span class="tag tag-outline">CONFIRMED BY YOU</span>';
+    return '<div class="card blueprint" style="margin-bottom:12px;gap:6px">'+corners()+
+     '<div class="row" style="justify-content:space-between"><span class="card-kicker">Order '+r[0]+'</span><span style="font-size:11px;color:var(--color-neutral-600)">'+r[1]+'</span></div>'+
+     '<div style="font-size:13.5px">'+r[2]+'</div>'+
+     '<div style="height:1px;background:var(--color-divider)"></div>'+
+     '<div class="row" style="gap:8px">'+tag+'<span style="font-size:11.5px;color:var(--color-neutral-600)">'+r[4]+'</span><span class="grow"></span><span style="font-family:var(--font-heading);font-size:14px">'+r[5]+'</span></div></div>';
+  }).join('');
+}
+function scrSpots(){
+  var learned=S.learned;
+  var rows=[];
+  if(learned)rows.push(['001','Blue rum shop · green gate, third house','13.0993, −59.6211','used 4×']);
+  rows.push(['002','St. Mary’s Church','13.0975, −59.6188','seeded']);
+  rows.push(['003','Esso gas station, Black Rock','13.1122, −59.6350','seeded']);
+  return '<div class="row" style="justify-content:space-between;margin-bottom:8px"><span class="micro">Saved drop points</span><span style="font-size:11px;color:var(--color-accent-700)">'+rows.length+' learned</span></div>'+
+   rows.map(function(r){return '<div class="card blueprint" style="margin-bottom:12px;gap:6px">'+corners()+
+     '<div class="row" style="gap:9px"><span class="row" style="justify-content:center;flex:none;width:22px;height:22px;border:1px solid var(--color-accent);font-family:var(--font-heading);font-size:11px;color:var(--color-accent-700)">'+r[0]+'</span>'+
+     '<span style="font-family:var(--font-heading);font-size:15px">'+r[1]+'</span><span class="grow"></span><span class="tag tag-known">⚡</span></div>'+
+     '<div style="height:1px;background:var(--color-divider)"></div>'+
+     '<div class="row" style="justify-content:space-between"><span style="font-size:10.5px;font-variant-numeric:tabular-nums;color:var(--color-neutral-600)">'+r[2]+'</span><span style="font-size:11px;color:var(--color-neutral-600)">'+r[3]+'</span></div></div>';
+   }).join('')+
+   '<p style="font-size:11.5px;color:var(--color-neutral-600)">Matched by word overlap first, then by meaning — “the drinks shop painted blue” finds the same gate.</p>';
+}
+
+/* ============================ Screens: driver ============================ */
+function scrDQueue(){
+  return '<div class="row blueprint" style="gap:11px;padding:11px;margin-bottom:14px">'+corners()+
+    '<span class="row" style="justify-content:center;width:34px;height:34px;border:1px solid var(--color-accent);font-family:var(--font-heading);color:var(--color-accent-800)">A</span>'+
+    '<div class="stack grow"><span style="font-family:var(--font-heading);font-size:15px">Andre D.</span><span style="font-size:11.5px;color:var(--color-neutral-600)">On shift · Bank Hall zone</span></div>'+
+    '<span style="font-family:var(--font-heading);font-size:22px;color:var(--color-accent-800)">2</span></div>'+
+   '<div class="sectlabel">Assigned runs</div>'+
+   dqCard('4471','Blue rum shop · green gate','pharmacy · 3 items','3.4 km',true)+
+   dqCard('4482','Yellow wall by the standpipe, Eagle Hall','grocery · 5 items','5.1 km',false);
+}
+function dqCard(id,place,items,dist,known){
+  var tag=known?'<span class="tag tag-known">⚡ KNOWN SPOT</span>':'<span class="tag tag-outline">NEW SPOT · PIN ME</span>';
+  return '<div class="card blueprint" style="margin-bottom:12px;gap:6px;cursor:pointer" onclick="'+(known?'go(\'djob\')':'')+'">'+corners()+
+    '<div class="row" style="justify-content:space-between"><span class="card-kicker">Run '+id+'</span><span style="font-size:11px;color:var(--color-neutral-600)">'+dist+'</span></div>'+
+    '<div style="font-family:var(--font-heading);font-size:16px">'+place+'</div>'+
+    '<div class="row" style="gap:8px">'+tag+'<span style="font-size:12px;color:var(--color-neutral-600)">'+items+'</span></div></div>';
+}
+function scrDJob(){
+  var path="M 34 150 C 120 130, 90 70, 180 66 S 300 92, 330 40";
+  return '<button class="btn btn-ghost" style="padding:0;margin-bottom:8px" onclick="go(\'dqueue\')">'+ic('arrow-left',16)+' RUNS</button>'+
+   '<div class="row" style="justify-content:flex-end;margin-top:-30px;margin-bottom:8px"><span class="tag tag-known">⚡ KNOWN SPOT</span></div>'+
+   '<div class="micro">Drop point 001</div>'+
+   '<h1 style="font-size:23px;margin:2px 0 12px">Blue rum shop — green gate, third house</h1>'+
+   '<div class="blueprint mapfig" style="height:170px;margin-bottom:12px">'+corners()+
+     '<svg viewBox="0 0 372 170" width="100%" height="100%" style="position:absolute;inset:0" fill="none">'+
+       '<path d="'+path+'" stroke="var(--color-accent)" stroke-width="2" stroke-dasharray="6 6" style="animation:ng-dash 2s linear infinite"/>'+
+       '<circle cx="34" cy="150" r="4" fill="var(--color-accent-700)"/></svg>'+
+     '<span class="driver" style="offset-path:path(\''+path+'\');top:-11px;left:-11px;animation:ng-drive 9s linear infinite">'+ic('bike',13)+'</span>'+
+     '<span class="pin" style="position:absolute;left:322px;top:22px">'+ic('map-pin',22)+'</span>'+
+     '<span style="position:absolute;left:10px;bottom:8px;font-size:9px;font-variant-numeric:tabular-nums;color:var(--color-neutral-600)">13.0993, −59.6211 · confirmed by customer</span>'+
+   '</div>'+
+   '<div class="card blueprint" style="gap:6px">'+corners()+
+     '<div class="card-kicker">Last-mile note · from memory</div>'+
+     '<div style="font-size:13px">Green gate is the third house past the rum shop, on the right. Gate opens inward. Leave with the customer, not at the gate.</div>'+
+     '<div style="height:1px;background:var(--color-divider)"></div>'+
+     '<div class="row" style="gap:8px"><span class="tag tag-neutral">4 deliveries here</span><span class="tag tag-neutral">Last: 6 days ago</span></div></div>'+
+   '<div class="card blueprint" style="margin-top:12px;gap:4px">'+corners()+
+     '<div class="micro">Order 4471 · pharmacy</div>'+
+     '<div style="font-size:13px">Prescription (usual) · Cemol 500mg · Water, 1 case</div></div>'+
+   '<div class="row" style="gap:8px;margin-top:14px"><button class="btn btn-secondary grow" style="height:46px">'+ic('navigation',16)+' NAVIGATE</button>'+
+   '<button class="btn btn-primary grow" style="height:46px" onclick="go(\'darrived\')">ARRIVED</button></div>';
+}
+function scrDArrived(){
+  return '<div class="row blueprint" style="gap:8px;padding:13px 12px;border-color:var(--color-accent);background:var(--color-accent-100);color:var(--color-accent-900);margin-bottom:14px">'+corners()+
+    ic('check',18)+'<span style="font-family:var(--font-heading);font-size:18px">Handed over · order 4471</span></div>'+
+   '<div class="card blueprint" style="gap:8px">'+corners()+
+     '<div class="card-kicker">Sharpen the spot · optional</div>'+
+     '<div class="card-title">Did you stop exactly on the pin?</div>'+
+     '<div class="blueprint mapfig" style="height:96px">'+corners()+
+       '<span class="pin" style="position:absolute;left:46%;top:30px;opacity:.4">'+ic('map-pin',20)+'</span>'+
+       '<span class="pin" style="position:absolute;left:56%;top:40px;color:var(--gold)">'+ic('map-pin',20)+'</span>'+
+       '<span style="position:absolute;left:10px;bottom:6px;font-size:9px;color:var(--color-neutral-600)">your stop · 11 m off</span></div>'+
+     '<p class="text-muted" style="font-size:12px;margin:0">Nudging the pin improves it for every driver after you.</p>'+
+     '<div class="row" style="gap:8px"><button class="btn btn-primary grow" style="height:44px" onclick="go(\'dqueue\')">USE MY STOP</button>'+
+     '<button class="btn btn-secondary grow" style="height:44px" onclick="go(\'dqueue\')">KEEP PIN</button></div></div>';
+}
+
+/* ============================ util ============================ */
+function corners(){return '<i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>';}
+function esc(s){return s.replace(/'/g,"\\'");}
+
+/* ============================ boot / autoplay ============================ */
+window.addEventListener('load',function(){
+  seedChat();set('screen','onboard');render();
+  // gentle autoplay of the customer story
+  T(1200,function(){ if(S.screen==='onboard'){go('chat');
+    T(900,function(){ if(S.screen==='chat')sendReply('my usual from the pharmacy + a case of water');
+      T(2600,function(){ if(S.screen==='chat')sendReply('third house past the blue rum shop, green gate'); });
+    });
+  }});
+});
+</script>
+</body>
+</html>
