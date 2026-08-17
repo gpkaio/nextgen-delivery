@@ -21,6 +21,7 @@
   nav .brand span{color:var(--gold)}
   nav .links a{margin-left:22px;text-decoration:none;font-size:14px;color:#dfe9e5}
   nav .links a:hover{color:var(--gold)}
+  nav .links a.proto{color:var(--gold);font-weight:700}
   @media(max-width:600px){nav .links{display:none}}
   header.hero{background:linear-gradient(160deg,var(--green) 0%,var(--green-deep) 100%);color:#fff;padding:84px 0 72px}
   .hero .tag{display:inline-block;border:1px solid var(--gold);color:var(--gold);font-size:12px;letter-spacing:1.5px;text-transform:uppercase;padding:5px 12px;border-radius:999px;margin-bottom:22px}
@@ -28,8 +29,8 @@
   .hero h1 span{color:var(--gold)}
   .hero p.role{font-size:20px;color:#cdded8;margin-bottom:24px}
   .hero p.lead{font-size:18px;max-width:640px;color:#e8efec}
-  .hero .cta{margin-top:30px}
-  .hero .cta a{display:inline-block;background:var(--gold);color:var(--green-deep);font-weight:700;text-decoration:none;padding:12px 22px;border-radius:8px;margin-right:12px}
+  .hero .cta{margin-top:30px;display:flex;flex-wrap:wrap;gap:12px}
+  .hero .cta a{display:inline-block;background:var(--gold);color:var(--green-deep);font-weight:700;text-decoration:none;padding:12px 22px;border-radius:8px}
   .hero .cta a.ghost{background:transparent;color:#fff;border:1px solid #6f8a84}
   @media(max-width:600px){.hero h1{font-size:34px}}
   section{padding:60px 0;border-bottom:1px solid var(--line)}
@@ -45,6 +46,7 @@
   ul.facts{list-style:none;margin-top:6px}
   ul.facts li{position:relative;padding-left:26px;margin-bottom:12px;font-size:16px;color:#33403c}
   ul.facts li::before{content:"";position:absolute;left:0;top:9px;width:10px;height:10px;background:var(--gold);border-radius:50%}
+  .protolink{display:inline-block;margin-top:6px;color:var(--green);font-weight:700;text-decoration:none;border-bottom:2px solid var(--gold)}
   .contact a{color:var(--green);font-weight:700;text-decoration:none;border-bottom:2px solid var(--gold)}
   footer{background:var(--green-deep);color:#aebfb9;text-align:center;padding:30px 0;font-size:14px}
   footer span{color:var(--gold)}
@@ -59,6 +61,7 @@
       <a href="#about">About</a>
       <a href="#venture">The Venture</a>
       <a href="#traction">Traction</a>
+      <a class="proto" href="nextgen_app.html" target="_blank" rel="noopener">Prototype ↗</a>
       <a href="#contact">Contact</a>
     </div>
   </div>
@@ -71,7 +74,8 @@
     <p class="role">Founder, NextGen Delivery · Bridgetown, Barbados</p>
     <p class="lead">Building agentic last-mile logistics for the Caribbean — a consumer delivery app powered by a multi-agent dispatch engine, designed for a region where addresses are landmarks and last-mile is broken.</p>
     <div class="cta">
-      <a href="#venture">See the venture</a>
+      <a href="nextgen_app.html" target="_blank" rel="noopener">Try the live prototype ↗</a>
+      <a class="ghost" href="#venture">See the venture</a>
       <a class="ghost" href="#contact">Get in touch</a>
     </div>
   </div>
@@ -91,6 +95,7 @@
     <h2>The Venture</h2>
     <h3>NextGen Delivery</h3>
     <p class="body">A consumer delivery app — food, grocery, pharmacy and parcel — powered by a multi-agent AI dispatch-and-routing engine. Customers order by text, voice or WhatsApp and describe where they are by landmark; specialized agents handle intake, landmark-to-location resolution, merchant ordering, driver dispatch and routing, and automatic recovery when things go wrong, with humans confirming the moments that matter.</p>
+    <p class="body"><a class="protolink" href="nextgen_app.html" target="_blank" rel="noopener">▶ Open the live clickable prototype — customer &amp; driver</a></p>
     <div class="grid">
       <div class="card"><h4>The problem</h4><p>No formal addresses, fragmented couriers, slow cross-island movement, and small merchants priced out of professional logistics.</p></div>
       <div class="card"><h4>The solution</h4><p>An agentic dispatch engine — the exportable core asset — that works without formal addresses, drawn directly from 13 years of hospital dispatch.</p></div>
